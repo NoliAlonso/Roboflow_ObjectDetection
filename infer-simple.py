@@ -1,6 +1,6 @@
 # load config
 import json
-with open('roboflow_config.json') as f:
+with open('Roboflow_config.json') as f:
     config = json.load(f)
 
     ROBOFLOW_API_KEY = config["ROBOFLOW_API_KEY"]
@@ -20,6 +20,7 @@ import time
 # (if running locally replace https://detect.roboflow.com/ with eg http://127.0.0.1:9001/)
 upload_url = "".join([
     "https://detect.roboflow.com/",
+    #"http://192.168.43.122:9001",
     ROBOFLOW_MODEL,
     "?api_key=",
     ROBOFLOW_API_KEY,
@@ -27,6 +28,7 @@ upload_url = "".join([
     "&stroke=5"
 ])
 
+#Could also use gstreamer
 # Get webcam interface via opencv-python
 video = cv2.VideoCapture(0)
 
