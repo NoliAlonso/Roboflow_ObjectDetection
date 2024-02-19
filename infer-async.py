@@ -28,7 +28,7 @@ upload_url = "".join([
     "?api_key=",
     ROBOFLOW_API_KEY,
     "&format=image", # Change to json if you want the prediction boxes, not the visualization
-    "&stroke=5"
+    "&stroke=5",
     f'&overlap={overlap_threshold * 100}',
     f'&confidence={confidence_threshold * 100}',
     '&labels=True'
