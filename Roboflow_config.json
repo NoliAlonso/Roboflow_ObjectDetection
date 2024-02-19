@@ -1,7 +1,7 @@
 {
-  "ROBOFLOW_API_KEY": "oDkrH1XmBTgm5SIRerW7",
-  "ROBOFLOW_MODEL": "bloodsmearoilimmersion/9",
-  "ROBOFLOW_SIZE": 800,
+  "ROBOFLOW_API_KEY": "your api key",
+  "ROBOFLOW_MODEL": "projectName/versionNumber",
+  "ROBOFLOW_SIZE": modelInputSizeNumber,
 
   "FRAMERATE": 24,
   "BUFFER": 0.5
