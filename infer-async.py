@@ -9,6 +9,8 @@ with open('Roboflow_config.json') as f:
 
     FRAMERATE = config["FRAMERATE"]
     BUFFER = config["BUFFER"]
+    overlap_threshold = config["OVERLAP"]
+    confidence_threshold = config["CONFIDENCE"]
 
 import asyncio
 import cv2
@@ -27,6 +29,9 @@ upload_url = "".join([
     ROBOFLOW_API_KEY,
     "&format=image", # Change to json if you want the prediction boxes, not the visualization
     "&stroke=5"
+    f'&overlap={overlap_threshold * 100}',
+    f'&confidence={confidence_threshold * 100}',
+    '&labels=True'
 ])
 
 #Can also use gstreamer
