@@ -21,7 +21,7 @@ import time
 # (if running locally replace https://detect.roboflow.com/ with eg http://127.0.0.1:9001/)
 upload_url = "".join([
     "https://detect.roboflow.com/",
-    #"http://192.168.43.122:9001",
+    #"http://192.168.43.122:9001/",
     ROBOFLOW_MODEL,
     "?api_key=",
     ROBOFLOW_API_KEY,
