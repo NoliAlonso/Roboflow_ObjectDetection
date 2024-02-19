@@ -10,6 +10,9 @@ with open('Roboflow_config.json') as f:
     FRAMERATE = config["FRAMERATE"]
     BUFFER = config["BUFFER"]
 
+    overlap_threshold = config["OVERLAP"]
+    confidence_threshold = config["CONFIDENCE"]
+
 import cv2
 import base64
 import numpy as np
@@ -25,7 +28,10 @@ upload_url = "".join([
     "?api_key=",
     ROBOFLOW_API_KEY,
     "&format=image",
-    "&stroke=5"
+    "&stroke=5",
+    f'&overlap={overlap_threshold * 100}',
+    f'&confidence={confidence_threshold * 100}',
+    '&labels=True'
 ])
 
 #Could also use gstreamer
