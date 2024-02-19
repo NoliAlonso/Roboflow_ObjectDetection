@@ -94,7 +94,11 @@ async def main():
             cv2.imshow('image', image)
 
 # Run our main loop
-asyncio.run(main())
+try:
+    asyncio.run(main())
+except Exception as e:
+    print(f"An exception occurred: {e}")
+    # Handle the exception or continue with other tasks
 
 # Release resources when finished
 video.release()
