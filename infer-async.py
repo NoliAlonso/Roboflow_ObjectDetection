@@ -18,12 +18,16 @@ import base64
 import numpy as np
 import httpx
 import time
+import skimage
+from skimage import io, filters
+from skimage.metrics import structural_similarity as ssim
+
 
 # Construct the Roboflow Infer URL
 # (if running locally replace https://detect.roboflow.com/ with eg http://127.0.0.1:9001/)
 upload_url = "".join([
-    "https://detect.roboflow.com/",
-    #"http://192.168.43.122:9001/",
+    #"https://detect.roboflow.com/",
+    "http://192.168.0.117:9001/",
     ROBOFLOW_MODEL,
     "?api_key=",
     ROBOFLOW_API_KEY,
@@ -34,6 +38,9 @@ upload_url = "".join([
     '&labels=True'
 ])
 
+prev_img = None
+prev_result = None
+
 #Can also use gstreamer
 # Get webcam interface via opencv-python
 video = cv2.VideoCapture(0)
@@ -41,8 +48,26 @@ video = cv2.VideoCapture(0)
 # Infer via the Roboflow Infer API and return the result
 # Takes an httpx.AsyncClient as a parameter
 async def infer(requests):
+    global prev_img, prev_result
     # Get the current image from the webcam
     ret, img = video.read()
+
+    # Check if the image is mostly black
+    if np.mean(img) < 30:  # You can adjust this threshold as needed
+        print("Skipping inference because the image is mostly black")
+        return img
+
+     # Check if the image is similar to the previous one
+    if prev_img is not None:
+        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        prev_img_gray = cv2.cvtColor(prev_img, cv2.COLOR_BGR2GRAY)
+        s = ssim(img_gray, prev_img_gray)
+
+        if s > 0.75:  # You can adjust this threshold as needed
+            print("Skipping inference because the image is similar to the previous one")
+            return prev_result
+
+    prev_img = img  # Update the previous image
 
     # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
     height, width, channels = img.shape
@@ -61,6 +86,8 @@ async def infer(requests):
     # Parse result image
     image = np.asarray(bytearray(resp.content), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+    prev_result = image  # Store the result
 
     return image
 
@@ -94,9 +121,12 @@ async def main():
 
             # Remove the first image from our buffer
             # wait for it to finish loading (if necessary)
-            image = await futures.pop(0)
-            # And display the inference results
-            cv2.imshow('image', image)
+            try:
+                image = await futures.pop(0)
+                # And display the inference results
+                cv2.imshow('image', image)
+            except Exception as e:
+                print(f"An exception in image await occurred: {e}")
 
 # Run our main loop
 try:

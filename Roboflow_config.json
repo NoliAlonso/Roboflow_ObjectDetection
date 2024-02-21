@@ -1,10 +1,10 @@
 {
-  "ROBOFLOW_API_KEY": "your api key",
-  "ROBOFLOW_MODEL": "projectName/versionNumber",
-  "ROBOFLOW_SIZE": modelInputSizeNumber,
+  "ROBOFLOW_API_KEY": "oDkrH1XmBTgm5SIRerW7",
+  "ROBOFLOW_MODEL": "bloodsmearoilimmersion/9",
+  "ROBOFLOW_SIZE": 800,
 
   "FRAMERATE": 24,
-  "BUFFER": 0.5
+  "BUFFER": 0.5,
 
   "OVERLAP": 0.5,
   "CONFIDENCE": 0.7

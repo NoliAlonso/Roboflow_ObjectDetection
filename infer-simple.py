@@ -22,8 +22,8 @@ import time
 # Construct the Roboflow Infer URL
 # (if running locally replace https://detect.roboflow.com/ with eg http://127.0.0.1:9001/)
 upload_url = "".join([
-    "https://detect.roboflow.com/",
-    #"http://192.168.43.122:9001/",
+    #"https://detect.roboflow.com/",
+    "http://192.168.0.117:9001/",
     ROBOFLOW_MODEL,
     "?api_key=",
     ROBOFLOW_API_KEY,
@@ -34,6 +34,10 @@ upload_url = "".join([
     '&labels=True'
 ])
 
+prev_img = None
+prev_result = None
+
+
 #Could also use gstreamer
 # Get webcam interface via opencv-python
 video = cv2.VideoCapture(0)
@@ -42,6 +46,11 @@ video = cv2.VideoCapture(0)
 def infer():
     # Get the current image from the webcam
     ret, img = video.read()
+
+    # Check if the image is mostly black
+    if np.mean(img) < 30:  # You can adjust this threshold as needed
+        print("Skipping inference because the image is mostly black")
+        return img
 
     # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
     height, width, channels = img.shape
