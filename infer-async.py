@@ -18,10 +18,7 @@ import base64
 import numpy as np
 import httpx
 import time
-import skimage
-from skimage import io, filters
-from skimage.metrics import structural_similarity as ssim
-
+import sys
 
 # Construct the Roboflow Infer URL
 # (if running locally replace https://detect.roboflow.com/ with eg http://127.0.0.1:9001/)
@@ -38,6 +35,13 @@ upload_url = "".join([
     '&labels=True'
 ])
 
+
+def ExitApp():
+    video.release()
+    cv2.destroyAllWindows()
+    sys.exit('Camera closed.')
+
+
 prev_img = None
 prev_result = None
 
@@ -45,35 +49,35 @@ prev_result = None
 # Get webcam interface via opencv-python
 video = cv2.VideoCapture(0)
 
+# Check if the camera is opened
+if video.isOpened():
+    print("Camera is opened.")
+else:
+    ExitApp()
+
+
 # Infer via the Roboflow Infer API and return the result
 # Takes an httpx.AsyncClient as a parameter
 async def infer(requests):
-    global prev_img, prev_result
     # Get the current image from the webcam
     ret, img = video.read()
-
-    # Check if the image is mostly black
-    if np.mean(img) < 30:  # You can adjust this threshold as needed
-        print("Skipping inference because the image is mostly black")
-        return img
-
-     # Check if the image is similar to the previous one
-    if prev_img is not None:
-        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        prev_img_gray = cv2.cvtColor(prev_img, cv2.COLOR_BGR2GRAY)
-        s = ssim(img_gray, prev_img_gray)
-
-        if s > 0.75:  # You can adjust this threshold as needed
-            print("Skipping inference because the image is similar to the previous one")
-            return prev_result
-
-    prev_img = img  # Update the previous image
 
     # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
     height, width, channels = img.shape
     scale = ROBOFLOW_SIZE / max(height, width)
     img = cv2.resize(img, (round(scale * width), round(scale * height)))
 
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    avg_pixel_value = np.average(gray)
+
+    # Check if the image is mostly black or white
+    if avg_pixel_value < 50: 
+        print("Skipping inference since the image is mostly black")
+        return img
+    elif avg_pixel_value > 200: 
+        print("Skipping inference since the image is mostly white")
+        return img
+    
     # Encode image to base64 string
     retval, buffer = cv2.imencode('.jpg', img)
     img_str = base64.b64encode(buffer)
@@ -86,8 +90,6 @@ async def infer(requests):
     # Parse result image
     image = np.asarray(bytearray(resp.content), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-
-    prev_result = image  # Store the result
 
     return image
 
@@ -135,6 +137,4 @@ except Exception as e:
     print(f"An exception occurred: {e}")
     # Handle the exception or continue with other tasks
 
-# Release resources when finished
-video.release()
-cv2.destroyAllWindows()
+ExitApp()

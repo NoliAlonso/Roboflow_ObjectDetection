@@ -1,11 +1,11 @@
 {
   "ROBOFLOW_API_KEY": "oDkrH1XmBTgm5SIRerW7",
-  "ROBOFLOW_MODEL": "bloodsmearoilimmersion/9",
-  "ROBOFLOW_SIZE": 800,
+  "ROBOFLOW_MODEL": "bloodsmearoilimmersion/10",
+  "ROBOFLOW_SIZE": 640,
 
   "FRAMERATE": 24,
   "BUFFER": 0.5,
 
-  "OVERLAP": 0.5,
-  "CONFIDENCE": 0.7
+  "OVERLAP": 0.4,
+  "CONFIDENCE": 0.6
 }
