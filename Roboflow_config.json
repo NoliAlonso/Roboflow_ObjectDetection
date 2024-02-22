@@ -4,7 +4,7 @@
   "ROBOFLOW_SIZE": modelInputSizeNumber,
 
   "FRAMERATE": 24,
-  "BUFFER": 0.5
+  "BUFFER": 0.5,
 
   "OVERLAP": 0.5,
   "CONFIDENCE": 0.7
