@@ -19,6 +19,8 @@ import numpy as np
 import time
 import sys
 import requests
+import hashlib
+from skimage.metrics import structural_similarity as ssim
 
 #ROBOFLOW_URL = "https://detect.roboflow.com/"
 #ROBOFLOW_URL = "http://192.168.0.117:9001/"
@@ -37,33 +39,41 @@ upload_url = "".join([
     '&labels=True'
 ])
 
+# Initialize previous image
+prev_img = None
+prev_img_time = None
+cache = {}
+
+def mse(imageA, imageB):
+    err = np.sum((imageA.astype("float") - imageB.astype("float")) ** 2)
+    err /= float(imageA.shape[0] * imageA.shape[1])
+    return err
 
 # Infer via the Roboflow Infer API and return the result
 def infer():
+    infer_time = time.time()
+    global prev_img
+    global prev_img_time
+
     # Get the current image from the webcam
     ret, img = video.read()
-
-    # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
-    height, width, channels = img.shape
-    scale = ROBOFLOW_SIZE / max(height, width)
-    img = cv2.resize(img, (round(scale * width), round(scale * height)))
-
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    avg_pixel_value = np.average(gray)
-
-    # Check if the image is mostly black or white
-    if avg_pixel_value < 50: 
-        print("Skipping inference since the image is mostly black")
-        return  img
-    elif avg_pixel_value > 200: 
-        print("Skipping inference since the image is mostly white")
-        return img
     
+    # If this is the first frame or the difference with the previous frame is significant
+    #if prev_img is None or ssim(img, prev_img, multichannel=True, channel_axis=2) < 0.9:
+    if prev_img is None or mse(img, prev_img) > 0.7:
+        # Update previous image
+        prev_img = img
+        prev_img_time = infer_time
+     
+    else:
+        # If the frames are too similar, return the previous inference result
+        return cache[prev_img_time]
+
     # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
     height, width, channels = img.shape
     scale = ROBOFLOW_SIZE / max(height, width)
     img = cv2.resize(img, (round(scale * width), round(scale * height)))
-
+    
     # Convert the image from BGR to RGB format
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -79,6 +89,8 @@ def infer():
     # Parse result image
     image = np.asarray(bytearray(resp.read()), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+    cache[infer_time] = image
 
     return image
 
@@ -109,9 +121,10 @@ while 1:
     # Print frames per second
     print((1/(time.time()-start)), " fps")
 
-        # On "q" keypress, exit
+    # On "q" keypress, exit
     if(cv2.waitKey(1) == ord('q')):
         break
+
 
 # Release resources when finished
 video.release()
