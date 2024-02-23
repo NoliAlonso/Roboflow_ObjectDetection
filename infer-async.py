@@ -42,9 +42,6 @@ def ExitApp():
     sys.exit('Camera closed.')
 
 
-prev_img = None
-prev_result = None
-
 #Can also use gstreamer
 # Get webcam interface via opencv-python
 video = cv2.VideoCapture(0)
@@ -78,6 +75,9 @@ async def infer(requests):
         print("Skipping inference since the image is mostly white")
         return img
     
+# Convert the image from BGR to RGB format
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
     # Encode image to base64 string
     retval, buffer = cv2.imencode('.jpg', img)
     img_str = base64.b64encode(buffer)

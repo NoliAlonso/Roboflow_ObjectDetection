@@ -16,14 +16,17 @@ with open('Roboflow_config.json') as f:
 import cv2
 import base64
 import numpy as np
-import requests
 import time
+import sys
+import requests
+
+#ROBOFLOW_URL = "https://detect.roboflow.com/"
+#ROBOFLOW_URL = "http://192.168.0.117:9001/"
+ROBOFLOW_URL = "http://192.168.43.192:9001/"
 
 # Construct the Roboflow Infer URL
-# (if running locally replace https://detect.roboflow.com/ with eg http://127.0.0.1:9001/)
 upload_url = "".join([
-    #"https://detect.roboflow.com/",
-    "http://192.168.0.117:9001/",
+    ROBOFLOW_URL,
     ROBOFLOW_MODEL,
     "?api_key=",
     ROBOFLOW_API_KEY,
@@ -34,28 +37,35 @@ upload_url = "".join([
     '&labels=True'
 ])
 
-prev_img = None
-prev_result = None
-
-
-#Could also use gstreamer
-# Get webcam interface via opencv-python
-video = cv2.VideoCapture(0)
 
 # Infer via the Roboflow Infer API and return the result
 def infer():
     # Get the current image from the webcam
     ret, img = video.read()
 
-    # Check if the image is mostly black
-    if np.mean(img) < 30:  # You can adjust this threshold as needed
-        print("Skipping inference because the image is mostly black")
-        return img
-
     # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
     height, width, channels = img.shape
     scale = ROBOFLOW_SIZE / max(height, width)
     img = cv2.resize(img, (round(scale * width), round(scale * height)))
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    avg_pixel_value = np.average(gray)
+
+    # Check if the image is mostly black or white
+    if avg_pixel_value < 50: 
+        print("Skipping inference since the image is mostly black")
+        return  img
+    elif avg_pixel_value > 200: 
+        print("Skipping inference since the image is mostly white")
+        return img
+    
+    # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
+    height, width, channels = img.shape
+    scale = ROBOFLOW_SIZE / max(height, width)
+    img = cv2.resize(img, (round(scale * width), round(scale * height)))
+
+    # Convert the image from BGR to RGB format
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     # Encode image to base64 string
     retval, buffer = cv2.imencode('.jpg', img)
@@ -72,11 +82,21 @@ def infer():
 
     return image
 
+
+#Could also use gstreamer
+# Get webcam interface via opencv-python
+video = cv2.VideoCapture(0)
+
+# Check if the camera is opened
+if video.isOpened():
+    print("Camera is opened.")
+else:
+    print("Camera is not opened.")
+    sys.exit('Camera unavailable.')
+
+
 # Main loop; infers sequentially until you press "q"
 while 1:
-    # On "q" keypress, exit
-    if(cv2.waitKey(1) == ord('q')):
-        break
 
     # Capture start time to calculate fps
     start = time.time()
@@ -88,6 +108,10 @@ while 1:
 
     # Print frames per second
     print((1/(time.time()-start)), " fps")
+
+        # On "q" keypress, exit
+    if(cv2.waitKey(1) == ord('q')):
+        break
 
 # Release resources when finished
 video.release()
