@@ -19,8 +19,9 @@ import numpy as np
 import time
 import sys
 import requests
-import hashlib
 from skimage.metrics import structural_similarity as ssim
+from collections import OrderedDict
+
 
 #ROBOFLOW_URL = "https://detect.roboflow.com/"
 #ROBOFLOW_URL = "http://192.168.0.117:9001/"
@@ -42,7 +43,10 @@ upload_url = "".join([
 # Initialize previous image
 prev_img = None
 prev_img_time = None
-cache = {}
+cache = OrderedDict()
+
+# Set a limit for the cache size
+cache_limit = 1000  # Adjust this value based on your requirements
 
 def mse(imageA, imageB):
     err = np.sum((imageA.astype("float") - imageB.astype("float")) ** 2)
@@ -90,7 +94,12 @@ def infer():
     image = np.asarray(bytearray(resp.read()), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
+    # Add the new inference result to the cache
     cache[infer_time] = image
+
+    # If the cache has exceeded its limit, remove the oldest item
+    if len(cache) > cache_limit:
+        cache.popitem(last=False)
 
     return image
 
